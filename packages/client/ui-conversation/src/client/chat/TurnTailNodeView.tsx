@@ -1,4 +1,6 @@
 import { memo } from 'react'
+// Type-only: merges the deepseekUsage key into SessionProjectionMap for useProjection.
+import type {} from '@deepseek-ai/dsh-deepseek-usage/client'
 import type { PropsRenderSlots } from '@deepseek-ai/dsh-client-ui-slots'
 import type { ChatNodeViewProps, TurnTailOwnerProps } from '../contract/slots.ts'
 import { MessageIconActions } from './MessageIconActions.tsx'
@@ -10,9 +12,13 @@ type TurnTailNodeViewProps = ChatNodeViewProps<'turn-tail'>
 
 /** Turn-local actions and feature tail over the Location index, independent of Assistant placement. */
 export const TurnTailNodeView = memo(function TurnTailNodeView({
-  node, openFile, forkAt, renderSlot, renderSlotChain, t, useSession,
+  node, openFile, forkAt, renderSlot, renderSlotChain, t, useSession, useProjection,
 }: TurnTailNodeViewProps) {
   const data = node.data
+  const deepseekUsage = useProjection('deepseekUsage')
+  const costBreakdown = deepseekUsage?.turns.find(candidate => candidate.turn === data.turn)
+  const costRmb = costBreakdown?.totalRmb
+  const costDetails = costBreakdown?.details
   const hasLaterChatNode = useSession(snapshot =>
     snapshot.chat.locations.getTurn(data.turn).at(-1) !== node.key)
   const turn = node.location.kind === 'turn' || node.location.kind === 'step'
@@ -41,6 +47,8 @@ export const TurnTailNodeView = memo(function TurnTailNodeView({
         runMs={runMs}
         ttftMs={data.ttftMs}
         tokensPerSecond={data.tokensPerSecond}
+        costRmb={costRmb}
+        costDetails={costDetails}
         clock="end"
         onBranch={() => { forkAt(closing.finalNode.seq) }}
         branchUnavailable={data.branchUnavailable || hasLaterChatNode}

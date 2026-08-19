@@ -51,6 +51,9 @@
       "path": "../../llm/token-meter"
     },
     {
+      "path": "../../llm/deepseek-usage"
+    },
+    {
       "path": "../../llm/llm-retry"
     },
     {

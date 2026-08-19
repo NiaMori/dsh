@@ -5,6 +5,17 @@ import type { Translate } from '@deepseek-ai/dsh-client-ui-slots'
 /** The date-template share of the conversation dictionary the clock consumes. */
 export type ClockTranslate = Translate<'clock.md' | 'clock.ymd'>
 
+/** The cost-formula template share of the conversation dictionary. */
+export type CostFormulaTranslate = Translate<
+  'stats.deepseekFormulaModel'
+  | 'stats.deepseekFormulaPeak'
+  | 'stats.deepseekFormulaOffPeak'
+  | 'stats.deepseekFormulaLabelUncached'
+  | 'stats.deepseekFormulaLabelCacheRead'
+  | 'stats.deepseekFormulaLabelCacheWrite'
+  | 'stats.deepseekFormulaLabelOutput'
+>
+
 /** The elapsed-duration share of the conversation dictionary. */
 export type RunDurationTranslate = Translate<'duration.seconds' | 'duration.minutes'>
 function pad2(n: number): string {
@@ -79,6 +90,65 @@ export function formatTokensPerSecond(tps: number): string {
  * @param now - Reference instant for the day/year cut (defaults to wall clock).
  * @returns Date-aware clock string (24-hour, zero-padded time).
  */
+/**
+ * Compact RMB cost figure: whole-yuan amounts show two decimals; sub-yuan
+ * amounts keep enough digits to stay meaningful for token-level billing.
+ * @param rmb - RMB amount.
+ * @returns Display string with the yen sign.
+ */
+export function formatRmb(rmb: number): string {
+  if (rmb >= 1) return `¥${rmb.toFixed(2)}`
+  if (rmb >= 0.01) return `¥${rmb.toFixed(4)}`
+  return `¥${rmb.toFixed(6)}`
+}
+
+/** The tiered token/price details that make up one DeepSeek cost figure. */
+export interface DeepSeekTierDetailLike {
+  uncachedInputTokens: number
+  uncachedInputPricePerMillion: number
+  uncachedInputRmb: number
+  cacheReadTokens: number
+  cacheReadPricePerMillion: number
+  cacheReadRmb: number
+  cacheWriteTokens: number
+  cacheWritePricePerMillion: number
+  cacheWriteRmb: number
+  outputTokens: number
+  outputPricePerMillion: number
+  outputRmb: number
+}
+
+/** Per-model peak/off-peak calculation details for one cost figure. */
+export interface DeepSeekModelDetailLike {
+  model: string
+  peak: DeepSeekTierDetailLike
+  offPeak: DeepSeekTierDetailLike
+}
+
+/**
+ * Compact token count for display columns: 517 / 12.2K / 517K / 1.2M.
+ * @param n - token count.
+ * @returns compact display string.
+ */
+export function formatTokens(n: number): string {
+  const scaled = (v: number): string =>
+    v >= 100 ? String(Math.round(v)) : String(Math.round(v * 10) / 10)
+  if (n < 1_000) return String(n)
+  if (n < 1_000_000) return `${scaled(n / 1_000)}K`
+  return `${scaled(n / 1_000_000)}M`
+}
+
+/** Token count with thousands separators for tooltip formulas. */
+export function formatTokenCount(tokens: number): string {
+  return String(Math.round(tokens)).replace(/\B(?=(\d{3})+(?!\d))/g, ',')
+}
+
+/** Unit price in the tooltip's per-million-token form. */
+export function formatUnitPrice(price: number): string {
+  return `¥${price.toFixed(2)}/1M`
+}
+
+
 export function formatMessageClock(time: number, t: ClockTranslate, now: number = Date.now()): string {
   const d = new Date(time)
   const n = new Date(now)

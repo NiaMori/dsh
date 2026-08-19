@@ -123,6 +123,7 @@ const SENTENCE_MODEL_EXPERIENCE: Readonly<Record<string, SentenceContract>> = {
   'packages/sdk/protocol': { kind: 'none', reason: 'Client-facing wire library; the runtime plugins behind the serving entry own model-facing behavior.' },
   'packages/session/session-projection': { kind: 'none', reason: 'The projection registry serves client-facing read models of already-logged session state and registers nothing model-facing.' },
   'packages/session/session-projection-cache': { kind: 'none', reason: 'The persisted cache accelerates host-side cold reads of projection state and registers nothing model-facing.' },
+  'packages/llm/deepseek-usage': { kind: 'none', reason: 'Host-side read-model projection over logged usage; registers no prompt, message, schema, stream, or tool result.' },
   'packages/session/session-stats': { kind: 'none', reason: 'The sessionStats unit folds already-logged step boundaries into a client-facing read model and registers nothing model-facing.' },
   'packages/session-query/session-query': { kind: 'none', reason: 'The trusted query service exposes cloned records only to callers and registers nothing model-facing.' },
   'packages/session-query/session-query-sqlite': { kind: 'none', reason: 'The search backend returns hits only to callers and registers nothing model-facing.' },

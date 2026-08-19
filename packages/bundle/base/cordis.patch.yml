@@ -281,6 +281,11 @@
     - id: token-meter
       name: '@deepseek-ai/dsh-token-meter'
 
+    # DeepSeek RMB cost projection over the same durable usage buckets.
+    # The projection folds provider-reported token usage; no model call.
+    - id: deepseek-usage
+      name: '@deepseek-ai/dsh-deepseek-usage'
+
     - id: compaction-basic
       name: '@deepseek-ai/dsh-compaction-basic'
 

@@ -567,6 +567,59 @@ export interface Config {
 
 Source: [`packages/credentials/credentials-local/src/index.ts:55`](../packages/credentials/credentials-local/src/index.ts)
 
+<a id="deepseek-aidsh-deepseek-usage"></a>
+
+## `@deepseek-ai/dsh-deepseek-usage`
+
+```ts config-catalog
+/** Plugin configuration; validated by the schemastery schema in index.ts. */
+export interface DeepSeekUsageConfig {
+  /** Per-model price table. Unknown model ids fall back to `defaultModel`. */
+  models: Record<string, DeepSeekPriceRmb>
+  /** Prices used for a model id not listed in `models`. */
+  defaultModel: DeepSeekPriceRmb
+  /**
+   * DeepSeek peak windows in minutes since UTC midnight. The official
+   * published peak hours are 01:00–04:00 and 06:00–10:00 UTC; every other
+   * hour is off-peak and billed at half the peak rate.
+   */
+  peakWindowsUtc: UtcWindow[]
+}
+
+/** One model's per-million-token RMB prices. */
+export interface DeepSeekPriceRmb {
+  /** Uncached prompt input (cache miss), RMB per million tokens. */
+  prompt: number
+  /** Cached prompt input (cache read), RMB per million tokens. */
+  cachedPrompt: number
+  /** Output, RMB per million tokens. */
+  output: number
+  /**
+   * Off-peak prices, replacing the peak prices outside the configured peak
+   * windows. Required by the config schema so every composed row carries both
+   * tiers.
+   */
+  offPeak: {
+    /** Off-peak uncached prompt input price, RMB per million tokens. */
+    prompt: number
+    /** Off-peak cached prompt input price, RMB per million tokens. */
+    cachedPrompt: number
+    /** Off-peak output price, RMB per million tokens. */
+    output: number
+  }
+}
+
+/** One UTC peak window in minutes since UTC midnight. */
+export interface UtcWindow {
+  /** Window start, minutes since UTC midnight. */
+  startMinutes: number
+  /** Window end (exclusive), minutes since UTC midnight. */
+  endMinutes: number
+}
+```
+
+Source: [`packages/llm/deepseek-usage/src/pricing.ts:50`](../packages/llm/deepseek-usage/src/pricing.ts)
+
 <a id="deepseek-aidsh-e2b"></a>
 
 ## `@deepseek-ai/dsh-e2b`

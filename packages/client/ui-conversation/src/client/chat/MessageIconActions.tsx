@@ -6,7 +6,8 @@ import {
   IconBranchOutline16, IconCheckOutline16, IconCopyOutline16, Tooltip, writeClipboard,
 } from '@deepseek-ai/dsh-client-ui-primitives'
 import type { ChatViewSlotProps } from '../contract/slots.ts'
-import { formatLatencySeconds, formatMessageClock, formatRunDuration, formatTokensPerSecond } from './message-chrome.ts'
+import { DeepSeekCostTooltip } from './DeepSeekCostTooltip.tsx'
+import { formatLatencySeconds, formatMessageClock, formatRmb, formatRunDuration, formatTokensPerSecond, type DeepSeekModelDetailLike } from './message-chrome.ts'
 import { useCalendarDay } from './use-calendar-day.ts'
 import css from './MessageIconActions.module.css'
 
@@ -21,6 +22,10 @@ export interface MessageIconActionsProps {
   ttftMs?: number | undefined
   /** Turn decode throughput, appended as `· 34 tok/s`; omitted when unrecorded. */
   tokensPerSecond?: number | undefined
+  /** DeepSeek RMB cost for this turn, appended as `· ¥1.23`; omitted when absent. */
+  costRmb?: number | undefined
+  /** Per-model peak/off-peak details for the rich hover card; omitted when absent. */
+  costDetails?: readonly DeepSeekModelDetailLike[] | undefined
   /** Clock before icons (user) or after (assistant). */
   clock: 'start' | 'end'
   /** Fork the session at this message; omission hides the branch action. */
@@ -44,8 +49,8 @@ export interface MessageIconActionsProps {
  * @returns The actions row element.
  */
 export function MessageIconActions({
-  text, time, runMs, ttftMs, tokensPerSecond, clock, onBranch, branchUnavailable = false, className,
-  extraActions, t,
+  text, time, runMs, ttftMs, tokensPerSecond, costRmb, costDetails, clock, onBranch,
+  branchUnavailable = false, className, extraActions, t,
 }: MessageIconActionsProps) {
   const day = useCalendarDay()
   const reasonId = useId()
@@ -103,6 +108,24 @@ export function MessageIconActions({
           <span className={css.runTimeDot} aria-hidden>·</span>
           {' '}
           {t('message.tokensPerSecond', { tps: formatTokensPerSecond(tokensPerSecond) })}
+        </>
+      )}
+      {costRmb !== undefined && (
+        <>
+          {' '}
+          <span className={css.runTimeDot} aria-hidden>·</span>
+          {' '}
+          {costDetails === undefined
+            ? (
+              <Tooltip label={formatRmb(costRmb)} side="top" delayMs={500}>
+                <span>{t('message.deepseekCost', { cost: formatRmb(costRmb) })}</span>
+              </Tooltip>
+            )
+            : (
+              <DeepSeekCostTooltip details={costDetails} t={t}>
+                <span>{t('message.deepseekCost', { cost: formatRmb(costRmb) })}</span>
+              </DeepSeekCostTooltip>
+            )}
         </>
       )}
     </span>

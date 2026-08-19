@@ -2,15 +2,19 @@
 // Mounted on 'conversation.composer.dock' so it sticks with the composer in the
 // active conversation scrollport (see ConversationRoot data-conversation-scroll).
 
-import { Fragment, memo, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { Fragment, memo, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { Tooltip } from '@deepseek-ai/dsh-client-ui-primitives'
 import type { ConversationSnapshot, UseProjection } from '@deepseek-ai/dsh-client-runtime/client'
 import type { SnapshotSelectorHook } from '@deepseek-ai/dsh-client-ui-slots'
 // Type-only: merges the sessionStats key into SessionProjectionMap for useProjection.
 import type {} from '@deepseek-ai/dsh-session-stats/client'
+// Type-only: merges the deepseekUsage key into SessionProjectionMap for useProjection.
+import type {} from '@deepseek-ai/dsh-deepseek-usage/client'
 import type { ContextPressureProjection, TokenUsageProjection } from '@deepseek-ai/dsh-token-meter/client'
 import type { ComposerBarProps } from '../contract/slots.ts'
-import { formatTokensPerSecond } from './message-chrome.ts'
+import { DeepSeekCostTooltip } from './DeepSeekCostTooltip.tsx'
+import { formatRmb, formatTokens, formatTokensPerSecond } from './message-chrome.ts'
+export { formatTokens } from './message-chrome.ts'
 import { assistantStepReading } from './turn-metrics.ts'
 import css from './StatsLine.module.css'
 
@@ -74,19 +78,6 @@ export function deriveStats(nodes: ConversationSnapshot['nodes']): WindowStats {
     }
   }
   return { turns: turns.size, steps, llmMs, toolMs, ttftMs, ttftSteps, decodeMs, decodeTokens }
-}
-
-/**
- * Compact token count: 517 / 12.2K / 517K / 1.2M (one decimal under three digits).
- * @param n - token count.
- * @returns display string.
- */
-export function formatTokens(n: number): string {
-  const scaled = (v: number): string =>
-    v >= 100 ? String(Math.round(v)) : String(Math.round(v * 10) / 10)
-  if (n < 1_000) return String(n)
-  if (n < 1_000_000) return `${scaled(n / 1_000)}K`
-  return `${scaled(n / 1_000_000)}M`
 }
 
 /**
@@ -163,37 +154,26 @@ export interface StatsLineProps {
 export const StatsLine = memo(function StatsLine({ useSession, useProjection, t }: StatsLineProps) {
   const settledNodes = useSession(s => s.chat.legacy.nodes)
   const usage = useProjection('tokenUsage')
+  const deepseekUsage = useProjection('deepseekUsage')
   // Every figure rides the durable sessionStats projection, so paging and
   // compaction cannot change any of them; an assembly without the unit falls
   // back to the window-scoped fold wholesale (same field names), paid only
   // while no projection value is served.
   const projected = useProjection('sessionStats')
   const stats = useMemo(() => projected ?? deriveStats(settledNodes), [projected, settledNodes])
-  // Pipe-separated groups (figma stats strip); a group with no data drops out whole.
-  const groups: string[] = []
-  if (stats.steps > 0) {
-    groups.push(t('stats.counts', { turns: stats.turns, steps: stats.steps }))
-    const durations: string[] = []
-    if (stats.llmMs > 0) durations.push(t('stats.llm', { duration: formatDuration(stats.llmMs) }))
-    if (stats.toolMs > 0) durations.push(t('stats.toolCall', { duration: formatDuration(stats.toolMs) }))
-    if (durations.length > 0) groups.push(durations.join(' · '))
-    const speeds: string[] = []
-    if (stats.ttftSteps > 0) {
-      speeds.push(t('stats.ttftAverage', { duration: formatDuration(stats.ttftMs / stats.ttftSteps) }))
-    }
-    if (stats.decodeMs > 0) {
-      speeds.push(t('stats.tokensPerSecond', {
-        throughput: formatTokensPerSecond(stats.decodeTokens / (stats.decodeMs / 1_000)),
-      }))
-    }
-    if (speeds.length > 0) groups.push(speeds.join(' · '))
+  // Pipe-separated groups (figma stats strip). The compact strip keeps only
+  // throughput, cache-hit rate, token totals, and DeepSeek RMB cost; the
+  // context ring owns occupancy, and turn/step/duration counts stay on the
+  // message rows.
+  const groups: ReactNode[] = []
+  if (stats.steps > 0 && stats.decodeMs > 0) {
+    groups.push(t('stats.tokensPerSecond', {
+      throughput: formatTokensPerSecond(stats.decodeTokens / (stats.decodeMs / 1_000)),
+    }))
   }
-  // Context occupancy deliberately lives on the composer's ContextMeter ring,
-  // not here — one home per fact.
-  // Billing rides the durable projection, so these survive paging and
+  // Billing rides the durable projections, so these survive paging and
   // compaction. Gated on actual token activity: a session whose steps all
-  // settled without billing (e.g. every request failed) shows its counts
-  // without a zero-token group.
+  // settled without billing (e.g. every request failed) shows no token group.
   if (usage !== undefined
     && (billedInputTokens(usage) > 0 || usage.outputTokens > 0)) {
     const cacheHit = cacheHitPercent(usage)
@@ -202,8 +182,15 @@ export const StatsLine = memo(function StatsLine({ useSession, useProjection, t 
       input: formatTokens(billedInputTokens(usage)),
       output: formatTokens(usage.outputTokens),
     }))
+    if (deepseekUsage !== undefined && deepseekUsage.totalRmb > 0) {
+      groups.push(
+        <DeepSeekCostTooltip key="deepseek-usage" details={deepseekUsage.details} t={t}>
+          <span>{t('stats.deepseekUsage', { cost: formatRmb(deepseekUsage.totalRmb) })}</span>
+        </DeepSeekCostTooltip>,
+      )
+    }
   }
-  const line = groups.join(' | ')
+  const line = groups.filter(group => typeof group === 'string').join(' | ')
   // The row elides with ellipsis when overlong; a delayed hover tooltip carries
   // the full line, enabled only while content is actually clipped.
   const rootRef = useRef<HTMLDivElement | null>(null)
@@ -223,7 +210,7 @@ export const StatsLine = memo(function StatsLine({ useSession, useProjection, t 
     <Tooltip label={line} side="top" delayMs={500} disabled={!truncated}>
       <div ref={rootRef} className={css.root}>
         {groups.map((group, i) => (
-          <Fragment key={group}>
+          <Fragment key={i}>
             {i > 0 && <><span className={css.sep} aria-hidden>|</span>{' '}</>}
             <span>{group}</span>
           </Fragment>
