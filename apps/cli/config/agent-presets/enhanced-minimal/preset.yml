@@ -1,0 +1,3 @@
+name: 增强极简
+description: 保留极简模式的双工具与完整系统提示词，注入 AGENTS.md / skills 位置提示，不新增任何工具。
+order: 5
