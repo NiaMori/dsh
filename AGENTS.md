@@ -148,3 +148,27 @@ Docs accompany every code change: update affected README and JSDoc contracts tog
 ## Vendoring policy
 
 `vendor/` packages are pinned source copies (manifest with upstream SHAs in [vendor/README.md](vendor/README.md)). Update via the sync procedure there; re-apply or retire the logged local modifications; rerun `pnpm run test && pnpm run build`.
+
+## Third-party dsh plugin sources
+
+The `web` profile's installed plugins are maintained as source checkouts in `plugins/` at this repo root. `plugins/` is not part of this repository's git tree: it is excluded via `.git/info/exclude` and is its own git repository.
+
+- Each plugin lives in `plugins/<dir>` and is installed into `~/.dsh/profiles/web` with `link:/home/niamori/i/dsh/plugins/<dir>` in that profile's `package.json`.
+- `dsh.profile.bundles` lists each plugin's npm package name; dsh loads package names, not directory paths.
+- Upstreams are tracked with `git subtree` (squashed) in the `plugins/` repository. Add upstream remotes as `upstream-<name>` and pull with `GIT_EDITOR=true git subtree pull -P <dir> upstream-<name> main --squash`.
+- `plugins/node_modules` must be a symlink to `~/.dsh/profiles/node_modules` (the dsh-healed module fallback) so out-of-tree plugin sources can resolve dsh host peers. The symlink is ignored by the plugins repository.
+- After editing a plugin that has a build step, run its package-manager install and build in `plugins/<dir>`, then `systemctl --user restart dsh-web.service`.
+- `dsh-passwords` is special: `plugins/dsh-passwords/.env` and `plugins/dsh-passwords/data/` are copied from `~/dsh-passwords`, are git-ignored, and must never be committed. Refresh the SQLite database with `node:sqlite` `backup()` while the old gateway is still live.
+
+Installed plugins:
+
+| package name | source directory | upstream |
+| --- | --- | --- |
+| `@dsh-external/dsh-mobile-nav` | `plugins/dsh-mobile-nav` | https://github.com/mexiaosqwq/dsh-web-mobile |
+| `dsh-better-sidebar` | `plugins/dsh-better-sidebar` | https://github.com/omdsh-dev/DSH-better-sidebar |
+| `dsh-client-auto-continue` | `plugins/dsh-client-auto-continue` | https://github.com/HsiangNianian/dsh-auto-continue |
+| `dsh-codex-auth` | `plugins/dsh-codex-auth` | https://github.com/suntianc/dsh-codex-auth |
+| `dsh-cot-profile` | `plugins/dsh-cot-profile` | https://github.com/Chloride233/dsh-cot-profile |
+| `dsh-mobile-back` | `plugins/dsh-mobile-back` | local source (no upstream) |
+| `dsh-passwords` | `plugins/dsh-passwords` | https://github.com/slywalker2006/dsh-passwords |
+| `dsh-worktree-panel` | `plugins/dsh-worktree-panel` | https://github.com/HeathHe/dsh-worktree-panel |
