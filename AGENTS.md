@@ -158,6 +158,7 @@ The `web` profile's installed plugins are maintained as source checkouts in `plu
 - Upstreams are tracked with `git subtree` (squashed) in the `plugins/` repository. Add upstream remotes as `upstream-<name>` and pull with `GIT_EDITOR=true git subtree pull -P <dir> upstream-<name> main --squash`.
 - `plugins/node_modules` must be a symlink to `~/.dsh/profiles/node_modules` (the dsh-healed module fallback) so out-of-tree plugin sources can resolve dsh host peers. The symlink is ignored by the plugins repository.
 - After editing a plugin that has a build step, run its package-manager install and build in `plugins/<dir>`, then `systemctl --user restart dsh-web.service`.
+- `dsh-passwords` builds with npm, and this shell exports `NODE_ENV=production`; install its dev dependencies with `NODE_ENV=development npm install`, then `NODE_ENV=development npm run build`.
 - `dsh-passwords` is special: `plugins/dsh-passwords/.env` and `plugins/dsh-passwords/data/` are copied from `~/dsh-passwords`, are git-ignored, and must never be committed. Refresh the SQLite database with `node:sqlite` `backup()` while the old gateway is still live.
 
 Installed plugins:
