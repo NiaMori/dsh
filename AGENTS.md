@@ -155,7 +155,7 @@ The `web` profile's installed plugins are maintained as source checkouts in `plu
 
 - Each plugin lives in `plugins/<dir>` and is installed into `~/.dsh/profiles/web` with `link:/home/niamori/i/dsh/plugins/<dir>` in that profile's `package.json`.
 - `dsh.profile.bundles` lists each plugin's npm package name; dsh loads package names, not directory paths.
-- Upstreams are tracked with `git subtree` (squashed). Upstream remotes are named `upstream-<name>`; sync with `GIT_EDITOR=true git subtree pull -P plugins/<dir> upstream-<name> main --squash`.
+- Upstream remotes are named `upstream-<name>`. To vendor-sync one plugin from upstream: `git fetch upstream-<name> main`, then `git archive FETCH_HEAD | tar -x -C /tmp/upstream-<name>`, `rsync -a --delete /tmp/upstream-<name>/ plugins/<dir>/`, review `git diff plugins/<dir>`, re-apply local modifications, and commit.
 - `plugins/node_modules` must be a symlink to `~/.dsh/profiles/node_modules` (the dsh-healed module fallback) so out-of-tree plugin sources can resolve dsh host peers. The symlink is git-ignored.
 - A task whose process cgroup is `dsh-web.service` must keep that unit active. Make `systemctl --user restart dsh-web.service` its final command when a restart is required; hand any stop/work/start sequence to a detached `systemd-run --user` unit before the task exits. Never issue a foreground stop: an explicit stop suppresses `Restart=always` and strands both the task and Web UI.
 - After editing a plugin that has a build step, run its package-manager install and build in `plugins/<dir>`, then `systemctl --user restart dsh-web.service`.

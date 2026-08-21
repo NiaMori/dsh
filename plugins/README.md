@@ -27,18 +27,22 @@ ln -s ~/.dsh/profiles/node_modules node_modules
 
 ## Upstream sync
 
-Each upstream is a `git subtree` (squashed) at the paths above. Remotes use the
-`upstream-<name>` convention; prefix paths are relative to this repository root.
+Each upstream is fetched through the `upstream-<name>` remotes. To vendor-sync
+one plugin, overlay the upstream tree onto the tracked directory, review the
+diff, re-apply any local modifications, and commit:
 
 ```bash
-GIT_EDITOR=true git subtree pull -P plugins/dsh-mobile-nav upstream-mobile-nav main --squash
-GIT_EDITOR=true git subtree pull -P plugins/dsh-better-sidebar upstream-better-sidebar main --squash
-GIT_EDITOR=true git subtree pull -P plugins/dsh-client-auto-continue upstream-auto-continue main --squash
-GIT_EDITOR=true git subtree pull -P plugins/dsh-codex-auth upstream-codex-auth main --squash
-GIT_EDITOR=true git subtree pull -P plugins/dsh-cot-profile upstream-cot-profile main --squash
-GIT_EDITOR=true git subtree pull -P plugins/dsh-passwords upstream-passwords main --squash
-GIT_EDITOR=true git subtree pull -P plugins/dsh-worktree-panel upstream-worktree-panel main --squash
+git fetch upstream-better-sidebar main
+mkdir -p /tmp/upstream-better-sidebar
+git archive FETCH_HEAD | tar -x -C /tmp/upstream-better-sidebar
+rsync -a --delete /tmp/upstream-better-sidebar/ plugins/dsh-better-sidebar/
+git diff --stat plugins/dsh-better-sidebar
+git add plugins/dsh-better-sidebar
+git commit -m "chore(plugins): sync dsh-better-sidebar with upstream main"
 ```
+
+`rsync --delete` removes plugin-local files that upstream deleted; review
+`git status` and restore any intentional local files before committing.
 
 ## Build after editing
 
