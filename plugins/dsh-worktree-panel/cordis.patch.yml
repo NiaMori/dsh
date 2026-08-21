@@ -1,0 +1,9 @@
+# Replace the official ui-workspace row with an enhanced build based on that
+# exact component. All official workspace/session behavior remains; the fork
+# only inserts the project -> worktree dimension into grouped view.
+- id: ui-workspace
+  name: '@deepseek-ai/dsh-client-ui-workspace'
+  disabled: true
+- insert:
+    - id: ui-worktree-panel
+      name: 'dsh-worktree-panel'

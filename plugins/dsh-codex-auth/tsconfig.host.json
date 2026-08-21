@@ -1,0 +1,17 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": true
+  },
+  "include": [
+    "src/**/*.ts",
+    "tests/codex-auth.spec.ts",
+    "tests/rpc.spec.ts",
+    "tests/search.spec.ts",
+    "tests/image.spec.ts",
+    "build/**/*.ts",
+    "tsdown.config.ts",
+    "vitest.config.ts"
+  ],
+  "exclude": ["src/client", "lib", "node_modules"]
+}

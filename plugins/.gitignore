@@ -1,0 +1,14 @@
+# per-plugin build / dependency dirs
+**/node_modules/
+**/dist/
+**/web/dist/
+
+# dsh-passwords local config & data (secrets)
+**/.env
+**/data/
+**/*.log
+**/setup-key.txt
+**/tls/
+**/tls.key
+**/tls.crt
+/node_modules

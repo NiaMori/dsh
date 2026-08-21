@@ -1,0 +1,4 @@
+# dsh-mobile-back bundle patch: one client-only plugin row.
+- insert:
+    - id: dsh-mobile-back
+      name: 'dsh-mobile-back'

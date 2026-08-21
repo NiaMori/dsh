@@ -1,0 +1,12 @@
+# Bundle patch for dsh-cot-profile: inserts the host + client plugin row.
+- insert:
+    - id: cot-profile
+      name: 'dsh-cot-profile'
+      config:
+        minBlocksForJudgment: 3
+        badge: true
+        panel: true
+        panelMode: overlay
+        record:
+          emit: true
+          file: /tmp/cot-records-test.jsonl

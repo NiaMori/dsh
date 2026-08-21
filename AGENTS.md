@@ -151,12 +151,13 @@ Docs accompany every code change: update affected README and JSDoc contracts tog
 
 ## Third-party dsh plugin sources
 
-The `web` profile's installed plugins are maintained as source checkouts in `plugins/` at this repo root. `plugins/` is not part of this repository's git tree: it is excluded via `.git/info/exclude` and is its own git repository.
+The `web` profile's installed plugins are maintained as source checkouts in `plugins/` at this repo root and are tracked as regular files in this repository on `master`.
 
 - Each plugin lives in `plugins/<dir>` and is installed into `~/.dsh/profiles/web` with `link:/home/niamori/i/dsh/plugins/<dir>` in that profile's `package.json`.
 - `dsh.profile.bundles` lists each plugin's npm package name; dsh loads package names, not directory paths.
-- Upstreams are tracked with `git subtree` (squashed) in the `plugins/` repository. Add upstream remotes as `upstream-<name>` and pull with `GIT_EDITOR=true git subtree pull -P <dir> upstream-<name> main --squash`.
-- `plugins/node_modules` must be a symlink to `~/.dsh/profiles/node_modules` (the dsh-healed module fallback) so out-of-tree plugin sources can resolve dsh host peers. The symlink is ignored by the plugins repository.
+- Upstreams are tracked with `git subtree` (squashed). Upstream remotes are named `upstream-<name>`; sync with `GIT_EDITOR=true git subtree pull -P plugins/<dir> upstream-<name> main --squash`.
+- `plugins/node_modules` must be a symlink to `~/.dsh/profiles/node_modules` (the dsh-healed module fallback) so out-of-tree plugin sources can resolve dsh host peers. The symlink is git-ignored.
+- A task whose process cgroup is `dsh-web.service` must keep that unit active. Make `systemctl --user restart dsh-web.service` its final command when a restart is required; hand any stop/work/start sequence to a detached `systemd-run --user` unit before the task exits. Never issue a foreground stop: an explicit stop suppresses `Restart=always` and strands both the task and Web UI.
 - After editing a plugin that has a build step, run its package-manager install and build in `plugins/<dir>`, then `systemctl --user restart dsh-web.service`.
 - `dsh-passwords` builds with npm, and this shell exports `NODE_ENV=production`; install its dev dependencies with `NODE_ENV=development npm install`, then `NODE_ENV=development npm run build`.
 - `dsh-passwords` is special: `plugins/dsh-passwords/.env` and `plugins/dsh-passwords/data/` are copied from `~/dsh-passwords`, are git-ignored, and must never be committed. Refresh the SQLite database with `node:sqlite` `backup()` while the old gateway is still live.

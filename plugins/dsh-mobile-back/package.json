@@ -1,0 +1,21 @@
+{
+  "name": "dsh-mobile-back",
+  "version": "0.1.0",
+  "description": "Mobile back-button opens and closes the dsh web sidebar drawer",
+  "type": "module",
+  "main": "index.js",
+  "exports": {
+    ".": "./index.js",
+    "./client": "./client.js",
+    "./package.json": "./package.json"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web"
+    }
+  },
+  "license": "MIT"
+}
