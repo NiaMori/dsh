@@ -319,9 +319,10 @@ export const LAYOUT_CSS = `/* ---------- mobile-only layout ---------- */
     order: 3 !important;
     flex: 0 0 auto !important;
   }
-  /* Session log download: gone from the header row on mobile (the utilities
-     seat holds only the session-log-export capsule). */
-  [data-phase] header > :first-child > :last-child {
+  /* Session log download: gone from the header row on mobile. Target only
+     the session-log button inside the utilities slot so third-party utility
+     entries (e.g. dsh-cot-profile's session-header badge) stay visible. */
+  [data-slot="conversation.session.header.utilities"] > button {
     display: none !important;
   }
 
