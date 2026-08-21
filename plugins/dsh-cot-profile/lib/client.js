@@ -78,6 +78,7 @@ window.__ModuleLoader__.load({
         'settings.minBlocks': '判定门槛（reasoning 块数）',
         'settings.badge': '会话头部徽章',
         'settings.panel': '实时面板',
+        'settings.panelOpen': '启动时自动展开面板',
         'settings.panelMode': '面板形态',
         'settings.panelMode.overlay': '悬浮面板（默认）',
         'settings.panelMode.track': '右侧轨道栏（实验性）',
@@ -166,6 +167,7 @@ window.__ModuleLoader__.load({
         'settings.minBlocks': 'Judgment threshold (reasoning blocks)',
         'settings.badge': 'Session-header badge',
         'settings.panel': 'Live panel',
+        'settings.panelOpen': 'Expand panel on startup',
         'settings.panelMode': 'Panel mode',
         'settings.panelMode.overlay': 'Floating panel (default)',
         'settings.panelMode.track': 'Right track column (experimental)',
@@ -477,8 +479,15 @@ window.__ModuleLoader__.load({
     function OverlayPanel({ useProjection, scope }) {
       useLocaleState();
       const profile = useProjection(PROJECTION_KEY);
-      const [open, setOpen] = React.useState(true);
+      const [open, setOpen] = React.useState(profile?.ui?.panelOpen ?? false);
       const [tab, setTab] = React.useState('live');
+      const didInitOpen = React.useRef(false);
+      React.useEffect(() => {
+        if (!didInitOpen.current && profile?.ui?.panelOpen !== undefined) {
+          didInitOpen.current = true;
+          setOpen(profile.ui.panelOpen);
+        }
+      }, [profile?.ui?.panelOpen]);
       const ui = profile?.ui;
       if (!ui?.panel || ui.panelMode === 'track') return null;
 
@@ -963,6 +972,7 @@ window.__ModuleLoader__.load({
         badge: true,
         panel: true,
         panelMode: 'overlay',
+        panelOpen: false,
         record: { emit: true, file: '' },
         weights: {},
         profiles: [],
@@ -1055,6 +1065,12 @@ window.__ModuleLoader__.load({
             { style: checkStyle },
             React.createElement('input', { type: 'checkbox', checked: value.panel ?? true, onChange: (event) => set('panel', event.target.checked) }),
             T('settings.panel'),
+          ),
+          React.createElement(
+            'label',
+            { style: checkStyle },
+            React.createElement('input', { type: 'checkbox', checked: value.panelOpen ?? false, onChange: (event) => set('panelOpen', event.target.checked) }),
+            T('settings.panelOpen'),
           ),
           React.createElement(
             'div',

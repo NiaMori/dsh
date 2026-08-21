@@ -121,7 +121,7 @@ export function foldEvent(state, event) {
  * Render the wire payload (whole value) from projection state + config.
  * Judgment is normalized so the wire schema's fields are always present.
  *
- * @param config { minBlocksForJudgment, weights, profiles, badge, panel, panelMode }
+ * @param config { minBlocksForJudgment, weights, profiles, badge, panel, panelMode, panelOpen }
  */
 export function renderView(state, config) {
   const vector = buildVector(state);
@@ -145,6 +145,7 @@ export function renderView(state, config) {
       badge: config.badge,
       panel: config.panel,
       panelMode: config.panelMode ?? 'overlay',
+      panelOpen: config.panelOpen ?? false,
       profilesCount: Array.isArray(config.profiles) ? config.profiles.length : 0,
     },
     revision: state.revision,

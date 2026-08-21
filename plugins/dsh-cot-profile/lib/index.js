@@ -69,6 +69,8 @@ const Config = z.object({
    * manipulation; a DSH upgrade may require adapting).
    */
   panelMode: z.union(['overlay', 'track']).default('overlay'),
+  /** Open the floating panel by default (false = collapsed corner button). */
+  panelOpen: z.boolean().default(false),
   /** Record-mode: per-session aggregate measurement at session end. */
   record: z
     .object({
@@ -109,7 +111,7 @@ const ViewSchema = zz.object({
     mixed: zz.boolean(),
     mixedReason: zz.string(),
   }),
-  ui: zz.object({ badge: zz.boolean(), panel: zz.boolean(), panelMode: zz.string(), profilesCount: zz.number() }),
+  ui: zz.object({ badge: zz.boolean(), panel: zz.boolean(), panelMode: zz.string(), panelOpen: zz.boolean(), profilesCount: zz.number() }),
   revision: zz.number().int().min(0),
 });
 
